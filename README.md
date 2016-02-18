@@ -24,3 +24,12 @@ and
 
 After noticing that the new ngComponentRouter has moved from its [home](https://github.com/angular/router) to the [angular2 codebase](https://github.com/angular/angular) and can be compiled for Angular 1.x we decided to give it a try.
 
+## Getting the ngComponentRouter
+As the angular team did decide to not create a package for the Angular 1.x version of the ngComponentRouter yet, you have to compile it yourself :( As an alternative you could take the compiled version from [Pete Bacon Darwin's](https://github.com/petebacondarwin/ng1-component-router-demo) or [Brandon Robert's](https://github.com/brandonroberts/angularjs-component-router) demo projects which helped us a lot to get started.
+
+**NOTE**: The angular team [fixed](https://github.com/angular/angular/commit/6f1ef33e320547f6c68867fa28d1189be7fa3519) [some](https://github.com/angular/angular/commit/e73fee715668740f1579093f61fea0f08d44da18) [bugs](https://github.com/angular/angular/commit/0f22dce036bd5cb3242edafb119256a6433dd4f4) in the Angular 1.x integration layer lately and we are optimistic that there will be an npm/bower package in the near future.
+
+### Compiling it yourself
+```
+//TODO: @fraetz
+```
