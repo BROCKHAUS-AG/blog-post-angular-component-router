@@ -37,6 +37,8 @@ As the Angular team did decide to not create a package for the Angular 1.x versi
 ### Creating our first route
 Since we are targeting Angular 1.5 we took the chance to also evaluate the new component syntax, especially in combination with the new routing. For an introduction to the component syntax see the [Angular Developer Guide](https://docs.angularjs.org/guide/component).
 
+To fully understand the examples and why we need to do some things the way we do them, is that the new ngComponentRouter is using hierachical routes. In a perfect angular 1.5 app every route is bound to a component which can in turn register new sub routes.
+
 TODO: Create example with app component, set value for main component, add two other routes.
 ```
 var app = ...
@@ -50,4 +52,4 @@ app.component('app', {
 });
 ```
 
-As you can see in our first example, you need to tell the ngComponentRouter where to find the initial app component which contains the initial route configuration. This is done by setting `$routerRootComponent`
+As you can see in our first example, we are setting up a `$routerRootComponent` for the router to search for an initial route configuration. As an alternative you could provide the router with an initial configuration by using a run block which Pete Bacon Darwin is doing in [his sample project](https://github.com/petebacondarwin/ng1-component-router-demo/blob/master/app/app.js). We felt more comfortable with our approach ...
