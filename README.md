@@ -4,7 +4,7 @@ We were especially interested in the capability to reuse existing controller ins
 In this blog post you will learn about our experiences.
 
 ## Introduction
-We use iFrames to isolate different parts of our application into independent websites. We have an application [component](https://docs.angularjs.org/guide/component) which is responsible for loading the correct website and pass the remaining url parts to the iFrame. Therefore our url contains the name of the website and the location path for it.
+We use iFrames to isolate different parts of our application into independent websites. We have an application [component](https://docs.angularjs.org/guide/component) which is responsible for loading the correct website and pass the remaining url parts to the iFrame. Therefore our url contains the name of the website and the location path for it. We synchronize the location of the iFrame with the outer website to support bookmarking and deep linking.
 
 ```
 /apps/:app/:location*
@@ -34,7 +34,7 @@ As the Angular team did decide to not create a package for the Angular 1.x versi
 //TODO: @fraetz
 ```
 
-### Creating our first route
+### Creating our first routes
 Since we are targeting Angular 1.5 we took the chance to also evaluate the new component syntax, especially in combination with the new routing. For an introduction to the component syntax see the [Angular Developer Guide](https://docs.angularjs.org/guide/component).
 
 To fully understand the examples and why we need to do some things the way we do them, is that the new ngComponentRouter is using hierachical routes. In a perfect angular 1.5 app every route is bound to a component which can in turn register new sub routes. You can find more details in the new [Component Router Developer Guide](https://docs.angularjs.org/guide/component-router).
@@ -61,6 +61,8 @@ To load some part of a specific application into the iFrame, our app component n
 ## Router Lifecycle Hooks
 [Router Lifecycle Hooks](https://docs.angularjs.org/guide/component-router#router-lifecycle-hooks) are a new concept of the ngComponentRouter which give you fine grained access to when and if components can be activated, deactivated and reused. This is achieved by implementing several of the following methods `$routerCanReuse`, `$routerOnActivate`, `$routerOnReuse`, `routerCanDeactivate` and `$routerOnDeactivate` in the component's controller. The last hook (`$routerCanActivate`) must be implemented in the component definition so that the controller may not be instantiated.
 
+We want our component to reuse the controller (and the view) as long as the application's `name` doesn't change. This will prevent the view and its iFrame to be recreated on every `location` change.
+
 TODO: Create plunkr?
 ```
 portalModule.component('app', {
@@ -69,13 +71,14 @@ portalModule.component('app', {
       return next.params.name === prev.params.name;
     }
 
+    this.$routerOnActivate = function (next) {
+      this.loadAppIntoIFrame(next.params.name, next.params.location);
+    }
+
     this.$routerOnReuse = function (next, prev) {
       if (this.hasAppLocationChanged(next, prev)) {
         this.changeAppLocation(next.params.location);
       }
-    }
-    this.$routerOnActivate = function (next) {
-      this.loadAppIntoIFrame(next.params.name, next.params.location);
     }
 
     this.hasAppLocationChanged = function (next, prev) {
@@ -85,12 +88,14 @@ portalModule.component('app', {
       ...
     }
     this.loadAppIntoIFrame = function (appName, appLocation) {
-      ...
+      ... // among others set this.iframeSrc
     }
   },
   template: `<iframe ng-src="{{$ctrl.iframeSrc | trustAsResourceUrl}}"></iframe>`,
 });
 ```
+
+To fulfill our needs, we implemented several lifecycle hooks. `$routerOnReuse` is called every time the route changes. Depending on whether or not the component should be reused, `$routerOnReuse` or `$routerOnActivate` are called.
 
 ## Conclusion
 
