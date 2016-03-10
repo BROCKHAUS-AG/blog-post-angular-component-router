@@ -1,10 +1,10 @@
 # Experiences on using the new ngComponentRouter in Angular 1.5
 While working on an angular project for one of our clients, Fabian Raetz and me had the pleasure to try out the new ngComponentRouter and see if it fits our needs.
-We were especially interested in the capability to reuse existing controller instances and how to get some $resolve-like functionality from ngRoute in the new ngComponentRouter.
+We were especially interested in the capability to reuse existing controller instances and how to get some [$resolve](https://docs.angularjs.org/api/ngRoute/provider/$routeProvider#when)-like functionality from ngRoute in the new ngComponentRouter.
 In this blog post you will learn about our experiences.
 
 ## Introduction
-In our application we use iFrames to seperate different parts of our application into independent websites. We have an application component which is responsible for loading the correct website and pass the remaining url parts to the iFrame. Therefore our url contains the name of the website and the location path for it.
+We use iFrames to isolate different parts of our application into independent websites. We have an application [component](https://docs.angularjs.org/guide/component) which is responsible for loading the correct website and pass the remaining url parts to the iFrame. Therefore our url contains the name of the website and the location path for it.
 
 ```
 /apps/:app/:location*
@@ -37,19 +37,61 @@ As the Angular team did decide to not create a package for the Angular 1.x versi
 ### Creating our first route
 Since we are targeting Angular 1.5 we took the chance to also evaluate the new component syntax, especially in combination with the new routing. For an introduction to the component syntax see the [Angular Developer Guide](https://docs.angularjs.org/guide/component).
 
-To fully understand the examples and why we need to do some things the way we do them, is that the new ngComponentRouter is using hierachical routes. In a perfect angular 1.5 app every route is bound to a component which can in turn register new sub routes.
+To fully understand the examples and why we need to do some things the way we do them, is that the new ngComponentRouter is using hierachical routes. In a perfect angular 1.5 app every route is bound to a component which can in turn register new sub routes. You can find more details in the new [Component Router Developer Guide](https://docs.angularjs.org/guide/component-router).
 
-TODO: Create example with app component, set value for main component, add two other routes.
+TODO: Create plunkr?
 ```
-var app = ...
-app.value('$routerRootComponent', 'app');
-app.component('app', {
-	templateUrl: 'components/app/app.html',
-	$routeConfig: [
-		  { path: '/home', component: 'home', name: 'Home', useAsDefault: true },
-		  { path: '/about', component: 'about', name: 'About' },
-		]
+var portalModule = angular.module('portal', ['ngComponentRouter']);
+portalModule.value('$routerRootComponent', 'portal');
+portalModule.component('portal', {
+  templateUrl: 'components/portal.html',
+  $routeConfig: [
+    { path: '/home', component: 'home', name: 'Home', useAsDefault: true },
+    { path: '/apps/:name/:location*', component: 'app', name: 'Apps' },
+  ],
 });
 ```
 
-As you can see in our first example, we are setting up a `$routerRootComponent` for the router to search for an initial route configuration. As an alternative you could provide the router with an initial configuration by using a run block which Pete Bacon Darwin is doing in [his sample project](https://github.com/petebacondarwin/ng1-component-router-demo/blob/master/app/app.js). We felt more comfortable with our approach ...
+As you can see in our first example, we are setting up a `$routerRootComponent` for the router to search for an initial route configuration which is also the [suggested solution](https://docs.angularjs.org/guide/component-router#root-router-and-component). As an alternative you could provide the router with an initial configuration by using a run block which Pete Bacon Darwin is doing in [his sample project](https://github.com/petebacondarwin/ng1-component-router-demo/blob/master/app/app.js).
+
+Our portal component defines two **route definitions**. The first route defines the default route which will load a component called `home`. This is achieved by setting `useAsDefault` to `true`.
+
+To load some part of a specific application into the iFrame, our app component needs to know the corresponding `name` and `location`. This is achieved by defining two **route parameters**. As you might have already noticed we are using a [star path segment](https://github.com/angular/angular/blob/75343eb34007579be9cdc803da834c38e02ae12c/modules/angular2/src/router/rules/route_paths/param_route_path.ts#L69-L81) for the `location` parameter which catches the remaining parts of the url (including following slashes `/`). This is similar to the [ngRoute star path](https://docs.angularjs.org/api/ngRoute/provider/$routeProvider#when).
+
+## Router Lifecycle Hooks
+[Router Lifecycle Hooks](https://docs.angularjs.org/guide/component-router#router-lifecycle-hooks) are a new concept of the ngComponentRouter which give you fine grained access to when and if components can be activated, deactivated and reused. This is achieved by implementing several of the following methods `$routerCanReuse`, `$routerOnActivate`, `$routerOnReuse`, `routerCanDeactivate` and `$routerOnDeactivate` in the component's controller. The last hook (`$routerCanActivate`) must be implemented in the component definition so that the controller may not be instantiated.
+
+TODO: Create plunkr?
+```
+portalModule.component('app', {
+  controller: function () {
+    this.$routerCanReuse = function (next, prev) {
+      return next.params.name === prev.params.name;
+    }
+
+    this.$routerOnReuse = function (next, prev) {
+      if (this.hasAppLocationChanged(next, prev)) {
+        this.changeAppLocation(next.params.location);
+      }
+    }
+    this.$routerOnActivate = function (next) {
+      this.loadAppIntoIFrame(next.params.name, next.params.location);
+    }
+
+    this.hasAppLocationChanged = function (next, prev) {
+      ...
+    }
+    this.changeAppLocation = function (appLocation) {
+      ...
+    }
+    this.loadAppIntoIFrame = function (appName, appLocation) {
+      ...
+    }
+  },
+  template: `<iframe ng-src="{{$ctrl.iframeSrc | trustAsResourceUrl}}"></iframe>`,
+});
+```
+
+## Conclusion
+
+If you are interested in how and especially why we are separating our application into several smaller applications and integrate them via iFrames, read our upcoming blog post ;)
