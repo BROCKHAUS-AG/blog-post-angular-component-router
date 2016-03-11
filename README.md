@@ -40,7 +40,7 @@ Since we are targeting Angular 1.5 we took the chance to also evaluate the new c
 To fully understand the examples and why we need to do some things the way we do them, is that the new ngComponentRouter is using hierachical routes. In a perfect angular 1.5 app every route is bound to a component which can in turn register new sub routes. You can find more details in the new [Component Router Developer Guide](https://docs.angularjs.org/guide/component-router).
 
 TODO: Create plunkr?
-```
+```js
 var portalModule = angular.module('portal', ['ngComponentRouter']);
 portalModule.value('$routerRootComponent', 'portal');
 portalModule.component('portal', {
@@ -64,38 +64,69 @@ To load some part of a specific application into the iFrame, our app component n
 We want our component to reuse the controller (and the view) as long as the application's `name` doesn't change. This will prevent the view and its iFrame to be recreated on every `location` change.
 
 TODO: Create plunkr?
-```
+```js
 portalModule.component('app', {
   controller: function () {
     this.$routerCanReuse = function (next, prev) {
       return next.params.name === prev.params.name;
-    }
+    };
 
-    this.$routerOnActivate = function (next) {
+    this.$routerOnActivate = (next) => {
       this.loadAppIntoIFrame(next.params.name, next.params.location);
-    }
+    };
 
-    this.$routerOnReuse = function (next, prev) {
+    this.$routerOnReuse = (next, prev) => {
       if (this.hasAppLocationChanged(next, prev)) {
         this.changeAppLocation(next.params.location);
       }
-    }
+    };
 
-    this.hasAppLocationChanged = function (next, prev) {
+    this.hasAppLocationChanged = (next, prev) => {
       ...
-    }
-    this.changeAppLocation = function (appLocation) {
+    };
+    
+    this.changeAppLocation = (appLocation) => {
       ...
-    }
-    this.loadAppIntoIFrame = function (appName, appLocation) {
+    };
+    
+    this.loadAppIntoIFrame = (appName, appLocation) => {
       ... // among others set this.iframeSrc
-    }
+    };
   },
   template: `<iframe ng-src="{{$ctrl.iframeSrc | trustAsResourceUrl}}"></iframe>`,
 });
 ```
 
 To fulfill our needs, we implemented several lifecycle hooks. `$routerOnReuse` is called every time the route changes. Depending on whether or not the component should be reused, `$routerOnReuse` or `$routerOnActivate` are called.
+
+`$routerOnActivate` will look up the application url. The `name` of all applications are stored in a dictionary which map to the corresponding url and full name. Afterwards the url is stored in `iframeSrc` which is bound to the iFrames src. To set ng-src you have to use the [$sce service](https://docs.angularjs.org/api/ng/service/$sce) to [make a trustworthy resource url](https://stackoverflow.com/questions/24163152/angularjs-ng-src-inside-of-iframe#answer-24163343).
+
+`$routerOnReuse` will send the new location (if it changed) to the iFrame via [postMessage-API](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage). We tried to update the iFrame's source using ng-src but the new location wasn't always visible within the iFrame.
+
+## How to get a $resolve-like behaviour
+In some parts of our application we use ngRoute's `$resolve` functionality to load external resources before navigating to the new view. This is done to ensure that all data is present when the view is rendered. Another benefit is that you can run different checks (e.g. permissions) before the controller is instantiated / view is shown.
+
+The new ngComponentRouter does not provide `$resolve` anymore. Instead you can use `$routerCanActivate` and `$routerOnActivate` to load external resources / perform additional checks. If some of your checks fail you can return a rejected promise - like it can be done in `$resolve` - to prevent the actual navigation from happening.
+
+```js
+portalModule.component('accountDetails', {
+  controller: function ($http, $rootRouter) {
+    this.$routerOnActivate = (next) => {
+      return $http.get('http://.../api/accountDetails/' + next.params.id).then(result => {
+        this.accountDetails = result.data;
+      }, error => {
+        if (error.status === 404) {
+          $rootRouter.navigateByInstruction(['NotFound']);
+        } else { 
+          // prevent navigation from happening
+          throw error;
+        };
+      });
+    };
+  },
+  templateUrl: 'components/account-details.html',
+});
+```
 
 ## Conclusion
 
