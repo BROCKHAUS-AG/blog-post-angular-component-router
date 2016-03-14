@@ -25,14 +25,19 @@ and
 After noticing that the new ngComponentRouter has moved from its [home](https://github.com/angular/router) to the [angular2 codebase](https://github.com/angular/angular) and can be compiled for Angular 1.x we decided to give it a try.
 
 ## How to get the ngComponentRouter up and running
-As the Angular team did decide to not create a package for the Angular 1.x version of the ngComponentRouter yet, you have to compile it yourself :( As an alternative you could take the compiled version from [Pete Bacon Darwin's](https://github.com/petebacondarwin/ng1-component-router-demo) or [Brandon Robert's](https://github.com/brandonroberts/angularjs-component-router) demo projects which helped us a lot to get started.
+As the Angular team recently decided to finally package the new ngComponentRouter you can install it from npm (`npm i @angular/router`). As an alternative you could take the compiled version from [Pete Bacon Darwin's](https://github.com/petebacondarwin/ng1-component-router-demo) or [Brandon Robert's](https://github.com/brandonroberts/angularjs-component-router) demo projects which helped us a lot to get started.
 
-**NOTE**: The Angular team [fixed](https://github.com/angular/angular/commit/6f1ef33e320547f6c68867fa28d1189be7fa3519) [some](https://github.com/angular/angular/commit/e73fee715668740f1579093f61fea0f08d44da18) [bugs](https://github.com/angular/angular/commit/0f22dce036bd5cb3242edafb119256a6433dd4f4) in the Angular 1.x integration layer lately and we are optimistic that there will be an npm/bower package in the near future.
+**NOTE**: The Angular team [fixed](https://github.com/angular/angular/commit/6f1ef33e320547f6c68867fa28d1189be7fa3519) [some](https://github.com/angular/angular/commit/e73fee715668740f1579093f61fea0f08d44da18) [bugs](https://github.com/angular/angular/commit/0f22dce036bd5cb3242edafb119256a6433dd4f4) in the Angular 1.x integration layer lately and we are optimistic that most the router reached an almost production-ready state.
 
 ### Compiling it ourself
+The new router resides inside the [Angular 2 codebase](https://github.com/angular/angular/tree/master/modules/angular1_router) since it is used by both Angular 1.x and Angular 2. In case you encounter some bugs and want to report or even fix them, you need to file / fix them in the [Angular 2 Repository](https://github.com/angular/angular).
+
+To build the Angular 1.x router you can use the following commands:
 ```
 //TODO: @fraetz
 ```
+
+**NOTE**: We encountered [some issues](https://github.com/angular/angular/issues/7457) with the build system while working on Windows. For now we would recommend you to use some UNIX-like OS for compiling.
 
 ### Creating our first routes
 Since we are targeting Angular 1.5 we took the chance to also evaluate the new component syntax, especially in combination with the new routing. For an introduction to the component syntax see the [Angular Developer Guide](https://docs.angularjs.org/guide/component).
@@ -108,6 +113,7 @@ In some parts of our application we use ngRoute's `$resolve` functionality to lo
 
 The new ngComponentRouter does not provide `$resolve` anymore. Instead you can use `$routerCanActivate` and `$routerOnActivate` to load external resources / perform additional checks. If some of your checks fail you can return a rejected promise - like it can be done in `$resolve` - to prevent the actual navigation from happening.
 
+TODO: Create plunkr?
 ```js
 portalModule.component('accountDetails', {
   controller: function ($http, $rootRouter) {
@@ -128,6 +134,11 @@ portalModule.component('accountDetails', {
 });
 ```
 
+In our example above we use `$routerOnActivate` to fetch some accountDetails with the `$http`-service and store them on the controller instance if everything went well. If the promise is rejected with a 404 status code, we instruct the router to redirect to the `NotFound` route. In all other cases we cancel the navigation by rejecting the promise. Beware that this can lead to an empty page if the user reloads the page.
+
+We use `$routerOnActivate` in favor of `$routerCanActivate` since we didn't find a way to pass data from the `$routerCanActivate` method to the controller instance. Another advantage is that we can specify `$routerOnActivate` as part of the controller whereas `$routerCanActivate` needs to be defined on the component definition (one thing that bugged us about the `$resolve`-approach too).
+
 ## Conclusion
+
 
 If you are interested in how and especially why we are separating our application into several smaller applications and integrate them via iFrames, read our upcoming blog post ;)
