@@ -139,6 +139,14 @@ In our example above we use `$routerOnActivate` to fetch some accountDetails wit
 We use `$routerOnActivate` in favor of `$routerCanActivate` since we didn't find a way to pass data from the `$routerCanActivate` method to the controller instance. Another advantage is that we can specify `$routerOnActivate` as part of the controller whereas `$routerCanActivate` needs to be defined on the component definition (one thing that bugged us about the `$resolve`-approach too).
 
 ## Conclusion
-
+* took us a while to get started
+  * how to get the router
+  * found some bugs
+  * took them some time to fix
+  * now faster
+* fulfills our requirements
+  * CanReuse, OnActivate, OnReuse
+  * OnActivate -> resolve
+* Components
 
 If you are interested in how and especially why we are separating our application into several smaller applications and integrate them via iFrames, read our upcoming blog post ;)
