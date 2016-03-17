@@ -139,14 +139,10 @@ In our example above we use `$routerOnActivate` to fetch some accountDetails wit
 We use `$routerOnActivate` in favor of `$routerCanActivate` since we didn't find a way to pass data from the `$routerCanActivate` method to the controller instance. Another advantage is that we can specify `$routerOnActivate` as part of the controller whereas `$routerCanActivate` needs to be defined on the component definition (one thing that bugged us about the `$resolve`-approach too).
 
 ## Conclusion
-* took us a while to get started
-  * how to get the router
-  * found some bugs
-  * took them some time to fix
-  * now faster
-* fulfills our requirements
-  * CanReuse, OnActivate, OnReuse
-  * OnActivate -> resolve
-* Components
+It took us some time to get startet with the new ngComponentRouter. First of all we needed to compile the router from source which, even today, [does not](https://github.com/angular/angular/issues/7457) really [work on windows](https://github.com/angular/angular/issues/7457). Now you can easily install the npm package. Then we found some bugs and waited for about three to four weeks before we even got any feedback. Since petebacondarwin joined the router team this changed dramatically. Normally you get some feedback within 24 hours.
+
+After our issues were solved, we were quite happy with the new component router. It overfulfills our requirements but is yet easy to use. With the help of the new router lifecycle methods we were able to gain fine grained control over when and how components are (re-) initialized. We could even improve our old $resolve-like fetching logic.
+
+Another great thing about the new router is that is works great (only?) with components. Our thoughts about how to use and isolate directives and the new component concept aligned quite well so we took the chance to start using them today.
 
 If you are interested in how and especially why we are separating our application into several smaller applications and integrate them via iFrames, read our upcoming blog post ;)
