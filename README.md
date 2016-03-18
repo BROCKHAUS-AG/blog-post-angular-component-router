@@ -27,14 +27,20 @@ After noticing that the new ngComponentRouter has moved from its [home](https://
 ## How to get the ngComponentRouter up and running
 As the Angular team recently decided to finally package the new ngComponentRouter you can install it from npm (`npm i @angular/router`). As an alternative you could take the compiled version from [Pete Bacon Darwin's](https://github.com/petebacondarwin/ng1-component-router-demo) or [Brandon Robert's](https://github.com/brandonroberts/angularjs-component-router) demo projects which helped us a lot to get started.
 
-**NOTE**: The Angular team [fixed](https://github.com/angular/angular/commit/6f1ef33e320547f6c68867fa28d1189be7fa3519) [some](https://github.com/angular/angular/commit/e73fee715668740f1579093f61fea0f08d44da18) [bugs](https://github.com/angular/angular/commit/0f22dce036bd5cb3242edafb119256a6433dd4f4) in the Angular 1.x integration layer lately and we are optimistic that most the router reached an almost production-ready state.
+**NOTE**: The Angular team [fixed](https://github.com/angular/angular/commit/6f1ef33e320547f6c68867fa28d1189be7fa3519) [some](https://github.com/angular/angular/commit/e73fee715668740f1579093f61fea0f08d44da18) [bugs](https://github.com/angular/angular/commit/0f22dce036bd5cb3242edafb119256a6433dd4f4) in the Angular 1.x integration layer lately and we are optimistic that the router reached an almost production-ready state.
 
 ### Compiling it ourself
 The new router resides inside the [Angular 2 codebase](https://github.com/angular/angular/tree/master/modules/angular1_router) since it is used by both Angular 1.x and Angular 2. In case you encounter some bugs and want to report or even fix them, you need to file / fix them in the [Angular 2 Repository](https://github.com/angular/angular).
 
 To build the Angular 1.x router you can use the following commands:
-```
-//TODO: @fraetz
+```bash
+git clone https://github.com/angular/angular.git
+cd angular
+npm install
+
+npm run build
+gulp buildRouter.dev
+cp dist/angular_1_router.js to/your/path
 ```
 
 **NOTE**: We encountered [some issues](https://github.com/angular/angular/issues/7457) with the build system while working on Windows. For now we would recommend you to use some UNIX-like OS for compiling.
@@ -44,7 +50,6 @@ Since we are targeting Angular 1.5 we took the chance to also evaluate the new c
 
 To fully understand the examples and why we need to do some things the way we do them, is that the new ngComponentRouter is using hierachical routes. In a perfect angular 1.5 app every route is bound to a component which can in turn register new sub routes. You can find more details in the new [Component Router Developer Guide](https://docs.angularjs.org/guide/component-router).
 
-TODO: Create plunkr?
 ```js
 var portalModule = angular.module('portal', ['ngComponentRouter']);
 portalModule.value('$routerRootComponent', 'portal');
@@ -68,7 +73,6 @@ To load some part of a specific application into the iFrame, our app component n
 
 We want our component to reuse the controller (and the view) as long as the application's `name` doesn't change. This will prevent the view and its iFrame to be recreated on every `location` change.
 
-TODO: Create plunkr?
 ```js
 portalModule.component('app', {
   controller: function () {
@@ -113,7 +117,6 @@ In some parts of our application we use ngRoute's `$resolve` functionality to lo
 
 The new ngComponentRouter does not provide `$resolve` anymore. Instead you can use `$routerCanActivate` and `$routerOnActivate` to load external resources / perform additional checks. If some of your checks fail you can return a rejected promise - like it can be done in `$resolve` - to prevent the actual navigation from happening.
 
-TODO: Create plunkr?
 ```js
 portalModule.component('accountDetails', {
   controller: function ($http, $rootRouter) {
@@ -138,11 +141,13 @@ In our example above we use `$routerOnActivate` to fetch some accountDetails wit
 
 We use `$routerOnActivate` in favor of `$routerCanActivate` since we didn't find a way to pass data from the `$routerCanActivate` method to the controller instance. Another advantage is that we can specify `$routerOnActivate` as part of the controller whereas `$routerCanActivate` needs to be defined on the component definition (one thing that bugged us about the `$resolve`-approach too).
 
-## Conclusion
-It took us some time to get startet with the new ngComponentRouter. First of all we had to compile the router ourselves which, even today, [does not](https://github.com/angular/angular/issues/7457) really [work on windows](https://github.com/angular/angular/issues/7457). Since the angular team provides a npm package you can easily install it via `npm install @angular/router`. While figuring out how the ngComponentRouter ought to work, we found some bugs and sent a few pull request which are mostly related to the angular-1 integration layer. Thanks to the angular team and especially to petebacondarwin, who took care of the angular 1.x ngComponentRouter lately, all our PR's got merged by now and are integrated into the official npm package.
+## Conclusion (tl;dr)
+It took us some time to get startet with the new ngComponentRouter. First of all we had to compile the router ourselves which - even today - [doesn't](https://github.com/angular/angular/issues/7457) really [work on windows](https://github.com/angular/angular/issues/7457). Since the angular team now provides a npm package you can easily install it via `npm install @angular/router`. While figuring out how the ngComponentRouter ought to work, we found some bugs and sent a few pull requests which are mostly related to the angular-1 integration layer. Thanks to the angular team and especially to [Pete Bacon Darwin](https://github.com/petebacondarwin), who takes care of the angular 1.x ngComponentRouter lately, all our PR's got merged by now and are integrated into the official npm package.
 
-After our issues were solved, we were quite happy with the new component router. It overfulfills our requirements but is yet easy to use. With the help of the new router lifecycle methods we were able to gain fine grained control over when and how components are (re-) initialized. We could even improve our old $resolve-like fetching logic.
+After our issues were solved, we were quite happy with the new component router. It fulfills our requirements and is yet easy to use. With the help of the new router lifecycle methods we were able to gain fine grained control over when and how components are reused. We could even improve our old $resolve fetching logic by inlining it into the controller.
 
-Another great thing about the new router is that is works great (only?) with components. Our thoughts about how to use and isolate directives and the new component concept aligned quite well so we took the chance to start using them today.
+Another great thing about the new router is that is works great with components. Our thoughts about how to use and isolate directives and the new component concept aligned quite well so we took the chance to start using them today.
 
-If you are interested in how and especially why we are separating our application into several smaller applications and integrate them via iFrames, read our upcoming blog post ;)
+Thx for reading. If you have any questions or comments feel free to ask ;)
+
+P.S.: If you are interested in how and especially why we are separating our application into several smaller applications and integrate them via iFrames, read our upcoming blog post ;)
